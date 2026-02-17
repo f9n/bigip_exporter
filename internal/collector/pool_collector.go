@@ -334,6 +334,21 @@ func NewPoolCollector(bigip *f5.Device, namespace string, partitionsList []strin
 				},
 				valueType: prometheus.GaugeValue,
 			},
+			"status_enabledState": {
+				desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, subsystem, "status_enabled_state"),
+					"status_enabled_state",
+					labelNames,
+					nil,
+				),
+				extract: func(entries f5.LBPoolStatsInnerEntries) float64 {
+					if entries.Status_enabledState.Description == "enabled" {
+						return 1
+					}
+					return 0
+				},
+				valueType: prometheus.GaugeValue,
+			},
 		},
 		collectorScrapeStatus: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{

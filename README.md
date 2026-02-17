@@ -194,6 +194,7 @@ Labels: `partition`, `vs`
 | Metric | Type | Description |
 |--------|------|-------------|
 | `bigip_vs_status_availability_state` | Gauge | Availability (1=available, 0=unavailable) |
+| `bigip_vs_status_enabled_state` | Gauge | Enabled state (1=enabled, 0=disabled) |
 | `bigip_vs_clientside_bytes_in` | Counter | Clientside bytes in |
 | `bigip_vs_clientside_bytes_out` | Counter | Clientside bytes out |
 | `bigip_vs_clientside_cur_conns` | Gauge | Current clientside connections |
@@ -236,6 +237,7 @@ Labels: `partition`, `pool`
 | Metric | Type | Description |
 |--------|------|-------------|
 | `bigip_pool_status_availability_state` | Gauge | Availability (1=available, 0=unavailable) |
+| `bigip_pool_status_enabled_state` | Gauge | Enabled state (1=enabled, 0=disabled) |
 | `bigip_pool_serverside_bytes_in` | Counter | Serverside bytes in |
 | `bigip_pool_serverside_bytes_out` | Counter | Serverside bytes out |
 | `bigip_pool_serverside_cur_conns` | Gauge | Current serverside connections |
@@ -286,6 +288,9 @@ Labels: `partition`, `node`
 | Metric | Type | Description |
 |--------|------|-------------|
 | `bigip_node_status_availability_state` | Gauge | Availability (1=available, 0=unavailable) |
+| `bigip_node_status_enabled_state` | Gauge | Enabled state (1=enabled, 0=disabled) |
+| `bigip_node_monitor_status` | Gauge | Monitor status (1=up, 0=down) |
+| `bigip_node_session_status` | Gauge | Session status (1=enabled, 0=disabled) |
 | `bigip_node_serverside_bytes_in` | Counter | Serverside bytes in |
 | `bigip_node_serverside_bytes_out` | Counter | Serverside bytes out |
 | `bigip_node_serverside_cur_conns` | Gauge | Current serverside connections |
@@ -309,6 +314,12 @@ Labels: `partition`, `rule`, `event`
 | `bigip_rule_min_cycles` | Gauge | Min CPU cycles per execution |
 | `bigip_rule_max_cycles` | Counter | Max CPU cycles per execution |
 | `bigip_rule_avg_cycles` | Gauge | Average CPU cycles per execution |
+
+### Exporter Info
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `bigip_exporter_build_info` | Gauge | Build info (constant 1). Labels: `version`, `commit`, `build_date`, `go_version` |
 
 ### Collector Metadata
 

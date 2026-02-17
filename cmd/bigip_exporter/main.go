@@ -8,21 +8,20 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/f9n/bigip_exporter/internal/collector"
-	"github.com/f9n/bigip_exporter/internal/config"
 	"github.com/pr8kerl/f5er/f5"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"sigs.k8s.io/release-utils/version"
+
+	"github.com/f9n/bigip_exporter/internal/collector"
+	"github.com/f9n/bigip_exporter/internal/config"
 )
 
 var (
 	logger  = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	cfgFile string
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
 )
 
 // rootCmd represents the base command
@@ -47,17 +46,6 @@ The exporter will connect to the specified BIG-IP system and expose
 Prometheus metrics on the configured port (default: 9142).`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runExporter()
-	},
-}
-
-// versionCmd represents the version command
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print version information",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("bigip_exporter %s\n", version)
-		fmt.Printf("  commit: %s\n", commit)
-		fmt.Printf("  built:  %s\n", date)
 	},
 }
 
@@ -109,7 +97,7 @@ func init() {
 
 	// Add commands
 	rootCmd.AddCommand(runCmd)
-	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(version.WithFont("doom"))
 }
 
 func initConfig() {
@@ -188,6 +176,19 @@ func runExporter() {
 	}
 
 	prometheus.MustRegister(bigipCollector)
+
+	// Register build info metric
+	v := version.GetVersionInfo()
+	buildInfo := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: cfg.Exporter.Namespace,
+			Name:      "exporter_build_info",
+			Help:      "A metric with a constant '1' value labeled by version, commit, and build date.",
+		},
+		[]string{"version", "commit", "build_date", "go_version"},
+	)
+	buildInfo.WithLabelValues(v.GitVersion, v.GitCommit, v.BuildDate, v.GoVersion).Set(1)
+	prometheus.MustRegister(buildInfo)
 
 	// Start HTTP server
 	listen(cfg.Exporter.BindAddress, cfg.Exporter.BindPort)

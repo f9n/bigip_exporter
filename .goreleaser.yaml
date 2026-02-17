@@ -23,9 +23,9 @@ builds:
       - -trimpath
     ldflags:
       - -s -w
-      - -X main.version={{.Tag}}
-      - -X main.commit={{.Commit}}
-      - -X main.buildDate={{.Date}}
+      - -X sigs.k8s.io/release-utils/version.gitVersion={{.Tag}}
+      - -X sigs.k8s.io/release-utils/version.gitCommit={{.Commit}}
+      - -X sigs.k8s.io/release-utils/version.buildDate={{.Date}}
 
 archives:
   - id: default

@@ -154,6 +154,51 @@ func NewNodeCollector(bigip *f5.Device, namespace string, partitionsList []strin
 				},
 				valueType: prometheus.GaugeValue,
 			},
+			"status_enabledState": {
+				desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, subsystem, "status_enabled_state"),
+					"status_enabled_state",
+					labelNames,
+					nil,
+				),
+				extract: func(entries f5.LBNodeStatsInnerEntries) float64 {
+					if entries.Status_enabledState.Description == "enabled" {
+						return 1
+					}
+					return 0
+				},
+				valueType: prometheus.GaugeValue,
+			},
+			"monitorStatus": {
+				desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, subsystem, "monitor_status"),
+					"monitor_status",
+					labelNames,
+					nil,
+				),
+				extract: func(entries f5.LBNodeStatsInnerEntries) float64 {
+					if entries.MonitorStatus.Description == "up" {
+						return 1
+					}
+					return 0
+				},
+				valueType: prometheus.GaugeValue,
+			},
+			"sessionStatus": {
+				desc: prometheus.NewDesc(
+					prometheus.BuildFQName(namespace, subsystem, "session_status"),
+					"session_status",
+					labelNames,
+					nil,
+				),
+				extract: func(entries f5.LBNodeStatsInnerEntries) float64 {
+					if entries.SessionStatus.Description == "enabled" {
+						return 1
+					}
+					return 0
+				},
+				valueType: prometheus.GaugeValue,
+			},
 		},
 		collectorScrapeStatus: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
