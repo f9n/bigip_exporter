@@ -82,16 +82,25 @@ func init() {
 	runCmd.Flags().String("exporter.log_level", "info", "Log level (debug, info, warn, error)")
 
 	// Bind flags to viper
-	viper.BindPFlag("bigip.host", runCmd.Flags().Lookup("bigip.host"))
-	viper.BindPFlag("bigip.port", runCmd.Flags().Lookup("bigip.port"))
-	viper.BindPFlag("bigip.username", runCmd.Flags().Lookup("bigip.username"))
-	viper.BindPFlag("bigip.password", runCmd.Flags().Lookup("bigip.password"))
-	viper.BindPFlag("bigip.basic_auth", runCmd.Flags().Lookup("bigip.basic_auth"))
-	viper.BindPFlag("exporter.bind_address", runCmd.Flags().Lookup("exporter.bind_address"))
-	viper.BindPFlag("exporter.bind_port", runCmd.Flags().Lookup("exporter.bind_port"))
-	viper.BindPFlag("exporter.partitions", runCmd.Flags().Lookup("exporter.partitions"))
-	viper.BindPFlag("exporter.namespace", runCmd.Flags().Lookup("exporter.namespace"))
-	viper.BindPFlag("exporter.log_level", runCmd.Flags().Lookup("exporter.log_level"))
+	for _, pair := range []struct {
+		key  string
+		flag string
+	}{
+		{"bigip.host", "bigip.host"},
+		{"bigip.port", "bigip.port"},
+		{"bigip.username", "bigip.username"},
+		{"bigip.password", "bigip.password"},
+		{"bigip.basic_auth", "bigip.basic_auth"},
+		{"exporter.bind_address", "exporter.bind_address"},
+		{"exporter.bind_port", "exporter.bind_port"},
+		{"exporter.partitions", "exporter.partitions"},
+		{"exporter.namespace", "exporter.namespace"},
+		{"exporter.log_level", "exporter.log_level"},
+	} {
+		if err := viper.BindPFlag(pair.key, runCmd.Flags().Lookup(pair.flag)); err != nil {
+			panic(fmt.Sprintf("failed to bind flag %s: %v", pair.flag, err))
+		}
+	}
 
 	// Environment variables
 	viper.SetEnvPrefix("BE")
@@ -187,7 +196,7 @@ func runExporter() {
 func listen(exporterBindAddress string, exporterBindPort int) {
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<html>
+		_, _ = w.Write([]byte(`<html>
 			<head><title>BIG-IP Exporter</title></head>
 			<body>
 			<h1>BIG-IP Exporter</h1>
