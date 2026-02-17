@@ -24,14 +24,16 @@ var (
 func NewBigipCollector(bigip *f5.Device, namespace string, partitionsList []string) (*BigipCollector, error) {
 	vsCollector, _ := NewVSCollector(bigip, namespace, partitionsList)
 	poolCollector, _ := NewPoolCollector(bigip, namespace, partitionsList)
+	poolMemberCollector, _ := NewPoolMemberCollector(bigip, namespace, partitionsList)
 	nodeCollector, _ := NewNodeCollector(bigip, namespace, partitionsList)
 	ruleCollector, _ := NewRuleCollector(bigip, namespace, partitionsList)
 	return &BigipCollector{
 		collectors: map[string]prometheus.Collector{
-			"node": nodeCollector,
-			"pool": poolCollector,
-			"rule": ruleCollector,
-			"vs":   vsCollector,
+			"node":        nodeCollector,
+			"pool":        poolCollector,
+			"pool_member": poolMemberCollector,
+			"rule":        ruleCollector,
+			"vs":          vsCollector,
 		},
 		totalScrapeDuration: prometheus.NewSummary(
 			prometheus.SummaryOpts{
