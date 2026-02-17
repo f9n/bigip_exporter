@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  bigip-exporter:
+    image: ghcr.io/f9n/bigip_exporter:latest
+    container_name: bigip-exporter
+    restart: unless-stopped
+    ports:
+      - "9142:9142"
+    environment:
+      # BIG-IP Configuration
+      BE_BIGIP_HOST: bigip.example.com
+      BE_BIGIP_PORT: 443
+      BE_BIGIP_USERNAME: admin
+      BE_BIGIP_PASSWORD: admin
+      BE_BIGIP_BASIC_AUTH: false
+
+      # Exporter Configuration
+      BE_EXPORTER_BIND_ADDRESS: 0.0.0.0
+      BE_EXPORTER_BIND_PORT: 9142
+      BE_EXPORTER_PARTITIONS: ""  # Empty = all partitions
+      BE_EXPORTER_NAMESPACE: bigip
+      BE_EXPORTER_LOG_LEVEL: info
+
+    # Alternative: use config file
+    # volumes:
+    #   - ./config.yaml:/etc/bigip_exporter/config.yaml:ro
+    # environment:
+    #   - BE_EXPORTER_CONFIG=/etc/bigip_exporter/config.yaml
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9142/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s

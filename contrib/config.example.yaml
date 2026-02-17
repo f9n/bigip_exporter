@@ -1,0 +1,38 @@
+---
+# F5 BIG-IP Configuration
+bigip:
+  # BIG-IP username
+  username: admin
+
+  # BIG-IP password
+  password: admin
+
+  # Use HTTP Basic authentication instead of token-based auth
+  basic_auth: false
+
+  # BIG-IP host address
+  host: bigip.example.com
+
+  # BIG-IP management port
+  port: 443
+
+# Exporter Configuration
+exporter:
+  # Address to bind the exporter
+  bind_address: 0.0.0.0
+
+  # Port to expose metrics
+  bind_port: 9142
+
+  # Comma-separated list of partitions to monitor (empty = all partitions)
+  # Example: "Common,Production,Development"
+  partitions: ""
+
+  # Prometheus metrics namespace
+  namespace: bigip
+
+  # Log level: debug, info, warn, error
+  log_level: info
+
+  # Path to this config file (can be set via CLI flag)
+  # config: /etc/bigip_exporter/config.yaml

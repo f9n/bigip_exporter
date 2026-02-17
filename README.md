@@ -1,105 +1,328 @@
-# BIG-IP exporter
-Prometheus exporter for BIG-IP statistics. Uses iControl REST API.
+# BIG-IP Exporter
 
-## Get it
-The latest version is 1.0.0. All releases can be found under [Releases](https://github.com/ExpressenAB/bigip_exporter/releases) and docker images are available at [Docker Hub](https://hub.docker.com/r/expressenab/bigip_exporter/tags/)(Thanks to [0x46616c6b](https://github.com/0x46616c6b)).
+[![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat&logo=go)](https://go.dev)
+[![Release](https://img.shields.io/github/v/release/f9n/bigip_exporter?style=flat)](https://github.com/f9n/bigip_exporter/releases)
+[![License](https://img.shields.io/github/license/f9n/bigip_exporter?style=flat)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-ghcr.io-2496ED?style=flat&logo=docker)](https://ghcr.io/f9n/bigip_exporter)
 
-## Usage
-The bigip_exporter is easy to use. Example:
-```
-./bigip_exporter --bigip.host <bigip-host> --bigip.port 443 --bigip.username admin --bigip.password admin
-```
+Prometheus exporter for F5 BIG-IP statistics. Exports metrics from BIG-IP systems using the iControl REST API.
 
-Alternatively, passing a configuration file:
-```
-./bigip_exporter --bigip.host <bigip-host> --bigip.port 443 --exporter.config my_config_file.yml
-```
+## 🚀 Quick Start
 
-Or, using environment variables to pass you parameters
-```
-export BE_BIGIP_HOST=<bigip-host>
-export BE_BIGIP_PORT=443
-export BE_EXPORTER_BIND_PORT=
-./bigip_exporter
+### Binary
+
+```bash
+# Download latest release
+curl -LO https://github.com/f9n/bigip_exporter/releases/latest/download/bigip_exporter_Linux_x86_64.tar.gz
+tar -xzf bigip_exporter_Linux_x86_64.tar.gz
+
+# Run
+./bigip_exporter run \
+  --bigip.host=bigip.example.com \
+  --bigip.username=admin \
+  --bigip.password=admin
 ```
 
 ### Docker
-The bigip_exporter is also available as a docker image.
+
+```bash
+docker run -d \
+  -p 9142:9142 \
+  -e BE_BIGIP_HOST=bigip.example.com \
+  -e BE_BIGIP_USERNAME=admin \
+  -e BE_BIGIP_PASSWORD=admin \
+  ghcr.io/f9n/bigip_exporter:latest
 ```
-docker run -p 9142:9142 expressenab/bigip_exporter --bigip.host <bigip-host> --bigip.port 443 --bigip.username admin --bigip.password admin
+
+### Docker Compose
+
+```bash
+cd contrib/
+docker-compose up -d
 ```
 
-### Parameters
-Parameters can be passed to the exporter in three different ways. They can be passed using flags, environment variables, a configuration file or a combination of the three. The precedence order is as follows with each item taking precedence over the item below it:
+### Kubernetes
 
-- flag
-- env
-- config
-
-#### Flags
-This application now uses [pflag](https://github.com/spf13/pflag) instead of the standard flag library. Therefore all flags now follow the POSIX standard and should be preceeded by `--`
-
-Flag | Description | Default
------|-------------|---------
-bigip.basic_auth | Use HTTP Basic instead of Token for authentication | false
-bigip.host | BIG-IP host | localhost
-bigip.port | BIG-IP port | 443
-bigip.username | BIG-IP username | user
-bigip.password | BIG-IP password | pass
-exporter.bind_address | The address the exporter should bind to | All interfaces
-exporter.bind_port | Which port the exporter should listen on | 9142
-exporter.partitions | A comma separated list containing the partitions that should be exported | All partitions
-exporter.namespace | The namespace used in prometheus labels | bigip
-exporter.config | A path to a yaml configuration file | none
-exporter.debug | Print configuration on startup | False
-
-#### Environment variables
-All options available as flags can be passed as environment variables. Below is a table of flag->environment variable mappings
-
-Flag | Environment variable
------|---------------------
-bigip.basic_auth | BE_BIGIP_BASIC_AUTH
-bigip.host | BE_BIGIP_HOST
-bigip.port | BE_BIGIP_PORT
-bigip.username | BE_BIGIP_USERNAME
-bigip.password | BE_BIGIP_PASSWORD
-exporter.bind_address | BE_EXPORTER_BIND_ADDRESS
-exporter.bind_port | BE_EXPORTER_BIND_PORT
-exporter.partitions | BE_EXPORTER_PARTITIONS
-exporter.namespace | BE_EXPORTER_NAMESPACE
-exporter.debug | BE_EXPORTER_DEBUG
-
-#### Configuration file
-Take a look at this [example configuration file](https://github.com/ExpressenAB/bigip_exporter/blob/master/example_bigip_exporter.yml)
-
-## Implemented metrics
-* Virtual Server
-* Rule
-* Pool
-* Node
-
-## Prerequisites
-* User with read access to iControl REST API
-
-## Tested versions of iControl REST API
-Currently only version 12.0.0 and 12.1.1 are tested. If you experience any problems with other versions, create an issue explaining the problem and I'll look at it as soon as possible or if you'd like to contribute with a pull request that would be greatly appreciated.
-
-## Building
-### Building locally
-This project uses [govendor](https://github.com/kardianos/govendor). If you do not already have that installed, take a detour and install that beforehand.
+```bash
+kubectl apply -f contrib/kubernetes.yaml
 ```
-# This assumes that you already have go and govendor installed and $GOPATH configured
-go get github.com/ExpressenAB/bigip_exporter
-cd $GOPATH/src/github.com/ExpressenAB/bigip_exporter
-govendor build +p
-```
-### Cross compilation
-Go offers possibility to cross compile the application for different use on a different OS and architecture. This is achieved by setting the environment valiables `GOOS` and `GOARCH`. If you for example want to build for linux on an amd64 architecture the `go build` step can be replaced with the following:
-```
-GOOS=linux GOARCH=amd64 govendor build +p
-```
-A list of available options for `GOOS` and `GOARCH` is available in the [documentation](https://golang.org/doc/install/source#environment)
 
-## Possible improvements
-### Gather data in the background
-Currently the data is gathered when the `/metrics` endpoint is called. This causes the request to take about 4-6 seconds before completing. This could be fixed by having a go thread that gathers data at regular intervals and that is returned upon a call to the `/metrics` endpoint. This would however go against the [guidelines](https://prometheus.io/docs/instrumenting/writing_exporters/#scheduling).
+Access metrics at `http://localhost:9142/metrics`
+
+## 📦 Installation
+
+### Download Binary
+
+Download the latest release for your platform from [GitHub Releases](https://github.com/f9n/bigip_exporter/releases).
+
+Available platforms:
+- Linux (amd64, arm64)
+- macOS (amd64, arm64)
+- Windows (amd64, arm64)
+
+### Docker Image
+
+```bash
+# Pull latest
+docker pull ghcr.io/f9n/bigip_exporter:latest
+
+# Pull specific version
+docker pull ghcr.io/f9n/bigip_exporter:v1.0.0
+
+# Pull specific architecture
+docker pull ghcr.io/f9n/bigip_exporter:latest-arm64
+```
+
+### Systemd Service
+
+```bash
+# Install binary
+sudo cp bigip_exporter /usr/local/bin/
+sudo chmod +x /usr/local/bin/bigip_exporter
+
+# Create user
+sudo useradd -r -s /sbin/nologin bigip-exporter
+
+# Install service
+sudo cp contrib/bigip-exporter.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now bigip-exporter
+```
+
+## ⚙️ Configuration
+
+The exporter supports three configuration methods (in order of precedence):
+
+1. **Command-line flags**
+2. **Environment variables** (prefix: `BE_`)
+3. **Configuration file**
+
+### Command-line Flags
+
+```bash
+./bigip_exporter run \
+  --bigip.host=bigip.example.com \
+  --bigip.port=443 \
+  --bigip.username=admin \
+  --bigip.password=admin \
+  --bigip.basic_auth=false \
+  --exporter.bind_address=0.0.0.0 \
+  --exporter.bind_port=9142 \
+  --exporter.partitions="Common,Production" \
+  --exporter.namespace=bigip \
+  --exporter.log_level=info
+```
+
+### Environment Variables
+
+```bash
+export BE_BIGIP_HOST=bigip.example.com
+export BE_BIGIP_PORT=443
+export BE_BIGIP_USERNAME=admin
+export BE_BIGIP_PASSWORD=admin
+export BE_EXPORTER_BIND_PORT=9142
+export BE_EXPORTER_LOG_LEVEL=info
+
+./bigip_exporter run
+```
+
+### Configuration File
+
+```bash
+./bigip_exporter run --config=/etc/bigip_exporter/config.yaml
+```
+
+Example configuration: [contrib/config.example.yaml](contrib/config.example.yaml)
+
+### Configuration Options
+
+| Flag | Environment Variable | Description | Default |
+|------|---------------------|-------------|---------|
+| `--bigip.host` | `BE_BIGIP_HOST` | BIG-IP hostname/IP | `localhost` |
+| `--bigip.port` | `BE_BIGIP_PORT` | BIG-IP management port | `443` |
+| `--bigip.username` | `BE_BIGIP_USERNAME` | BIG-IP username | `user` |
+| `--bigip.password` | `BE_BIGIP_PASSWORD` | BIG-IP password | `pass` |
+| `--bigip.basic_auth` | `BE_BIGIP_BASIC_AUTH` | Use HTTP Basic auth | `false` |
+| `--exporter.bind_address` | `BE_EXPORTER_BIND_ADDRESS` | Bind address | `localhost` |
+| `--exporter.bind_port` | `BE_EXPORTER_BIND_PORT` | Bind port | `9142` |
+| `--exporter.partitions` | `BE_EXPORTER_PARTITIONS` | Comma-separated partitions | `` (all) |
+| `--exporter.namespace` | `BE_EXPORTER_NAMESPACE` | Prometheus namespace | `bigip` |
+| `--exporter.log_level` | `BE_EXPORTER_LOG_LEVEL` | Log level (debug/info/warn/error) | `info` |
+| `--config` | `BE_CONFIG` | Config file path | `` |
+
+## 🎯 CLI Commands
+
+The exporter uses a modern CLI structure with subcommands:
+
+```bash
+# Show help and available commands
+./bigip_exporter --help
+
+# Start the exporter (main command)
+./bigip_exporter run [flags]
+
+# Show version information
+./bigip_exporter version
+
+# Generate shell completion scripts
+./bigip_exporter completion bash   # For Bash
+./bigip_exporter completion zsh    # For Zsh
+./bigip_exporter completion fish   # For Fish
+```
+
+### Shell Completion
+
+Enable shell completion for a better CLI experience:
+
+```bash
+# Bash
+./bigip_exporter completion bash > /etc/bash_completion.d/bigip_exporter
+
+# Zsh
+./bigip_exporter completion zsh > "${fpath[1]}/_bigip_exporter"
+
+# Fish
+./bigip_exporter completion fish > ~/.config/fish/completions/bigip_exporter.fish
+```
+
+## 📊 Exported Metrics
+
+### Virtual Servers
+
+- `bigip_vs_status` - Virtual server availability status
+- `bigip_vs_enabled_state` - Virtual server enabled state
+- `bigip_vs_clientside_bits_in` - Clientside bits in
+- `bigip_vs_clientside_bits_out` - Clientside bits out
+- `bigip_vs_clientside_cur_conns` - Current client connections
+- And more...
+
+### Pools
+
+- `bigip_pool_status` - Pool availability status
+- `bigip_pool_available_members` - Number of available pool members
+- `bigip_pool_up_members` - Number of up pool members
+- `bigip_pool_serverside_bits_in` - Serverside bits in
+- And more...
+
+### Nodes
+
+- `bigip_node_status` - Node availability status
+- `bigip_node_session_status` - Node session status
+- `bigip_node_serverside_bits_in` - Serverside bits in
+- And more...
+
+### Rules (iRules)
+
+- `bigip_rule_aborts` - Rule aborts
+- `bigip_rule_avg_cycles` - Average cycles per execution
+- `bigip_rule_executions` - Total executions
+- `bigip_rule_failures` - Total failures
+- And more...
+
+All metrics include labels for `partition` and resource name.
+
+## 🔧 Development
+
+### Prerequisites
+
+- Go 1.26 or later
+- Make (optional)
+
+### Building from Source
+
+```bash
+# Clone repository
+git clone https://github.com/f9n/bigip_exporter.git
+cd bigip_exporter
+
+# Install dependencies
+go mod download
+
+# Build
+go build -v ./cmd/bigip_exporter
+
+# Run
+./bigip_exporter run --bigip.host=bigip.example.com
+```
+
+### Running Tests
+
+```bash
+go test ./...
+```
+
+### Local Release Build
+
+```bash
+# Install goreleaser
+go install github.com/goreleaser/goreleaser@latest
+
+# Create a snapshot release
+goreleaser release --snapshot --clean
+
+# Check dist/ directory
+ls -lh dist/
+```
+
+### Project Structure
+
+```
+bigip_exporter/
+├── cmd/
+│   └── bigip_exporter/    # Main application
+│       └── main.go
+├── internal/
+│   ├── collector/         # Prometheus collectors
+│   └── config/            # Configuration
+├── contrib/               # Example configs & deployment files
+├── .build/                # Build artifacts
+└── .github/               # CI/CD workflows
+```
+
+## 📝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 🐛 Reporting Issues
+
+If you find a bug or have a feature request, please create an issue on [GitHub Issues](https://github.com/f9n/bigip_exporter/issues).
+
+## 📚 Resources
+
+- [Prometheus](https://prometheus.io/)
+- [F5 BIG-IP iControl REST API](https://clouddocs.f5.com/api/icontrol-rest/)
+- [Example Configurations](contrib/)
+- [Releases](https://github.com/f9n/bigip_exporter/releases)
+
+## 🔐 Security
+
+- Never commit credentials to version control
+- Use Kubernetes Secrets, Docker Secrets, or environment variables for sensitive data
+- Run containers as non-root user (automatically configured)
+- Use TLS for BIG-IP connections in production
+
+## 📄 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Original project by [ExpressenAB](https://github.com/ExpressenAB/bigip_exporter)
+- F5 for the BIG-IP platform
+- Prometheus community
+
+## 📞 Support
+
+- 📖 Documentation: [README](README.md) and [contrib/](contrib/)
+- 🐛 Bug Reports: [GitHub Issues](https://github.com/f9n/bigip_exporter/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/f9n/bigip_exporter/discussions)
+
+---
+
+**Made with ❤️ for the DevOps community**

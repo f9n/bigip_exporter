@@ -5,13 +5,35 @@
 # Don't ignore .gitignore, LICENSE and *.go files
 !.gitignore
 !.dockerignore
+!Dockerfile*
 !LICENSE
 !*.go
+!*.yaml
+!*.yml
+!*.service
 !.travis.yml
 !Makefile
-!vendor/**
-!Dockerfile
-!example_bigip_exporter.yml
-!build.sh
+!README.md
+
+# Go modules
+!go.mod
+!go.sum
+
+# GoReleaser
+!.goreleaser.yaml
+!.build/
+
+# GitHub workflows
+!.github/
+
+# Project structure
+!cmd/
+!internal/
+!contrib/
+
+# Ignore built binaries and vendor
+/bigip_exporter
+vendor/
+dist/
 src
 pkg

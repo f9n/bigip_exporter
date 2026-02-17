@@ -1,0 +1,151 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bigip-exporter-config
+  namespace: monitoring
+data:
+  config.yaml: |
+    ---
+    bigip:
+      username: admin
+      password: admin
+      basic_auth: false
+      host: bigip.example.com
+      port: 443
+    exporter:
+      bind_address: 0.0.0.0
+      bind_port: 9142
+      partitions: ""
+      namespace: bigip
+      log_level: info
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bigip-exporter-secret
+  namespace: monitoring
+type: Opaque
+stringData:
+  username: admin
+  password: changeme
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bigip-exporter
+  namespace: monitoring
+  labels:
+    app: bigip-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bigip-exporter
+  template:
+    metadata:
+      labels:
+        app: bigip-exporter
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9142"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: bigip-exporter
+        image: ghcr.io/f9n/bigip_exporter:latest
+        imagePullPolicy: Always
+        ports:
+        - name: metrics
+          containerPort: 9142
+          protocol: TCP
+        env:
+        - name: BE_BIGIP_HOST
+          value: "bigip.example.com"
+        - name: BE_BIGIP_PORT
+          value: "443"
+        - name: BE_BIGIP_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: bigip-exporter-secret
+              key: username
+        - name: BE_BIGIP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bigip-exporter-secret
+              key: password
+        - name: BE_BIGIP_BASIC_AUTH
+          value: "false"
+        - name: BE_EXPORTER_BIND_ADDRESS
+          value: "0.0.0.0"
+        - name: BE_EXPORTER_BIND_PORT
+          value: "9142"
+        - name: BE_EXPORTER_NAMESPACE
+          value: "bigip"
+        - name: BE_EXPORTER_LOG_LEVEL
+          value: "info"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: metrics
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: metrics
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65534
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bigip-exporter
+  namespace: monitoring
+  labels:
+    app: bigip-exporter
+spec:
+  type: ClusterIP
+  ports:
+  - name: metrics
+    port: 9142
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app: bigip-exporter
+
+---
+# Optional: ServiceMonitor for Prometheus Operator
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: bigip-exporter
+  namespace: monitoring
+  labels:
+    app: bigip-exporter
+spec:
+  selector:
+    matchLabels:
+      app: bigip-exporter
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics

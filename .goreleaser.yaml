@@ -1,0 +1,105 @@
+version: 2
+project_name: bigip_exporter
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: bigip_exporter
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    main: ./cmd/bigip_exporter
+    binary: bigip_exporter
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Tag}}
+      - -X main.commit={{.Commit}}
+      - -X main.buildDate={{.Date}}
+
+archives:
+  - id: default
+    formats:
+      - tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+dockers:
+  - id: bigip_exporter-amd64
+    image_templates:
+      - "ghcr.io/f9n/bigip_exporter:{{ .Tag }}-amd64"
+      - "ghcr.io/f9n/bigip_exporter:latest-amd64"
+    dockerfile: .build/Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/f9n/bigip_exporter"
+      - "--label=org.opencontainers.image.description=Prometheus exporter for F5 BIG-IP"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
+    goos: linux
+    goarch: amd64
+
+  - id: bigip_exporter-arm64
+    image_templates:
+      - "ghcr.io/f9n/bigip_exporter:{{ .Tag }}-arm64"
+      - "ghcr.io/f9n/bigip_exporter:latest-arm64"
+    dockerfile: .build/Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/f9n/bigip_exporter"
+      - "--label=org.opencontainers.image.description=Prometheus exporter for F5 BIG-IP"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
+    goos: linux
+    goarch: arm64
+
+docker_manifests:
+  - name_template: "ghcr.io/f9n/bigip_exporter:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/f9n/bigip_exporter:{{ .Tag }}-amd64"
+      - "ghcr.io/f9n/bigip_exporter:{{ .Tag }}-arm64"
+
+  - name_template: "ghcr.io/f9n/bigip_exporter:latest"
+    image_templates:
+      - "ghcr.io/f9n/bigip_exporter:latest-amd64"
+      - "ghcr.io/f9n/bigip_exporter:latest-arm64"

@@ -1,0 +1,15 @@
+# Use Google's distroless static image for minimal and secure container
+FROM gcr.io/distroless/static:nonroot
+
+# Copy the pre-built binary from GoReleaser
+COPY bigip_exporter /bigip_exporter
+
+# Expose the default exporter port
+EXPOSE 9142
+
+# Run as non-root user (defined in the base image)
+USER nonroot:nonroot
+
+# Set the entrypoint to execute the application
+ENTRYPOINT ["/bigip_exporter"]
+CMD ["run"]

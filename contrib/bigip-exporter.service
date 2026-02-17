@@ -1,0 +1,41 @@
+[Unit]
+Description=F5 BIG-IP Prometheus Exporter
+Documentation=https://github.com/f9n/bigip_exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bigip-exporter
+Group=bigip-exporter
+
+# Path to the binary
+ExecStart=/usr/local/bin/bigip_exporter run
+
+# Configuration via environment variables
+Environment="BE_BIGIP_HOST=bigip.example.com"
+Environment="BE_BIGIP_PORT=443"
+Environment="BE_BIGIP_USERNAME=admin"
+Environment="BE_BIGIP_PASSWORD=admin"
+Environment="BE_BIGIP_BASIC_AUTH=false"
+Environment="BE_EXPORTER_BIND_ADDRESS=0.0.0.0"
+Environment="BE_EXPORTER_BIND_PORT=9142"
+Environment="BE_EXPORTER_NAMESPACE=bigip"
+Environment="BE_EXPORTER_LOG_LEVEL=info"
+
+# Alternative: use config file
+# ExecStart=/usr/local/bin/bigip_exporter run --config=/etc/bigip_exporter/config.yaml
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/bigip_exporter
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
