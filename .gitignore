@@ -14,6 +14,13 @@
 !.travis.yml
 !Makefile
 !README.md
+!DEVELOPMENT.md
+
+# Jsonnet mixin
+!docs/
+!*.jsonnet
+!*.libsonnet
+!docs/**/*.json
 
 # Go modules
 !go.mod
